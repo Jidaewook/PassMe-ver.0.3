@@ -7,8 +7,8 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 router.post('/register', (req, res) => {
-   const {name, email, password} = req.body;
-   userModel
+    const {name, email, password} = req.body;
+    userModel
         .findOne({email})
         .exec((err, user) => {
             if(user) {
@@ -16,21 +16,54 @@ router.post('/register', (req, res) => {
                     error: 'Email is taken'
                 });
             } 
-        });
-        let newUser = new userModel({ name, email, password});
-
-        newUser
-            .save((err, success) => {
-                if(err){
-                    return res.status(400).json({
-                        error: err.message
+            const token = jwt.sign(
+                {name, email, password},
+                process.env.JWT_ACCOUNT_ACTIVATION,
+                {expiresIn: '10m'}
+            );
+            const emailData = {
+                from: process.env.EMAIL_FROM,
+                to: email,
+                subject: 'Account activation link',
+                html: `
+                    <h1>Please use the following link to activate your account</h1>
+                    <p>${process.env.CLIENT_URL}/auth/activate/${token}</p>
+                    <hr />
+                    <p>This email may contain sensetive information</p>
+                    <p>${process.env.CLIENT_URL}</p>
+                `
+            };
+            sgMail
+                .send(emailData)
+                .then(sent => {
+                    return res.status(200).json({
+                        message: `Email has been sent to ${email}. Follow the instruction to activate your account`
                     });
-                }
-                const token = jwt.sign(
-                    {name, email, password},
-                    process.env.JWT_ACCOUNT_ACTIVATION,
-                    {expiresIn: '10m'}
-                );
+
+                })  
+                .catch(err =>{
+                    return res.json({
+                        message: err.message
+                    });
+                });
+
+        });
+
+
+        // let newUser = new userModel({ name, email, password});
+
+        // newUser
+        //     .save((err, success) => {
+        //         if(err){
+        //             return res.status(400).json({
+        //                 error: err.message
+        //             });
+        //         }
+        //         const token = jwt.sign(
+        //             {name, email, password},
+        //             process.env.JWT_ACCOUNT_ACTIVATION,
+        //             {expiresIn: '10m'}
+        //         );
 
                 // 이메일 인증 코드(센드그리드 활용)
                 // const emailData = {
@@ -58,11 +91,11 @@ router.post('/register', (req, res) => {
                 //     });
                     
 
-                res.json({
-                    message: 'Signup success! Please signin', 
-                    tokeninfo: token
-                })
-            });
+            //     res.json({
+            //         message: 'Signup success! Please signin', 
+            //         tokeninfo: token
+            //     })
+            // });
    
 });
 
@@ -195,6 +228,37 @@ router.put('/reset', (req, res) => {
         });
 });
 
+router.post('/account-activation', (req, res) => {
+    const {token} = req.body;
+    if(token) {
+        jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, function(err, decoded){
+            if(err) {
+                return res.status(401).json({
+                    error: 'Expired link. Signup again'
+                });
+            }
+            const {name, email, password} = jwt.decode(token);
 
+            const user = new userModel( name, email, password );
+
+            user
+                .save((err, user) => {
+                    if(err){ 
+                        return res.status(401).json({
+                            error: 'Error saving user in database. Try signup again'
+                        });
+                    } 
+                    return res.json({
+                        message: 'Signup success. Please Signin'
+                    });
+                });
+            
+        });
+    } else {
+        return res.json({
+            message: 'Something went wrong. Try again.'
+        });
+    }
+});
 
 module.exports = router;
