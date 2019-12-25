@@ -129,7 +129,7 @@ router.post('/login', (req, res) => {
             process.env.JWT_SECRET, {expiresIn: '7d'});
             const {_id, name, email, role} = user;
             return res.status(200).json({
-                tokeninfo: token,
+                token: token,
                 user: {_id, name, email, role}
             });
         })
@@ -305,6 +305,8 @@ router.post('/account-activation', (req, res) => {
     }
 });
 
+
+//로그인 후 초기화면으로서의 프로필을 받아오는 것
 router.get('/:user_id', requireLogin, (req, res) => {
     const userID = req.params.user_id;
     userModel
