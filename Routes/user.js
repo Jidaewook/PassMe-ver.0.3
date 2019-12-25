@@ -383,5 +383,25 @@ router.put('/update', requireLogin, (req, res) => {
 
 });
 
+router.put('/admin/update', requireLogin, (req, res, next) => {
+    userModel
+        .findById(req.user._id)
+        .exec((err, user) => {
+            if(err||!user){
+                return res.status(400).json({
+                    error: 'User not found'
+                });
+            } 
+            if(user.role !== 'admin'){
+                return res.status(400).json({
+                    error: 'Admin resource. Access Denied.'
+                });
+            }
+
+            req.profile = user;
+            next();
+        });
+});
+
 
 module.exports = router;
