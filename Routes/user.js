@@ -455,6 +455,69 @@ router.post('/google-login', (req, res) => {
 
 });
 
+router.post('/facebook-login', (req, res) => {
+    console.log('Facebook Login req body', req.body);
+    const {userID, accessToken} = req.body;
+
+    const url = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email&access_token=${accessToken}`;
+
+    return (
+        fetch(url, {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then(resJson => {
+                const {email, name} = resJson;
+                console.log("FB email is", email);
+                userModel   
+                    .findOne(email)
+                    .exec((err, user) => {
+                        if(user){
+                            const token = jwt.sign(
+                                {_id: user._id},
+                                process.env.JWT_SECRET,
+                                {expiresIn: '7d'}
+                            );
+                            const {_id, email, name, role} = user;
+                            return res.json({
+                                token,
+                                user: {_id, email, name, role}
+                            });
+                        } else {
+                            let password = email + process.env.JWT_SECRET;
+                            user = new userModel({name, email, password});
+                            user.save((err, data) => {
+                                if(err) {
+                                    console.log('ERROR FACEBOOK LOGIN', err);
+                                    return res.status(400).json({
+                                        error: 'User Login failed with facebook'
+                                    });
+                                } else{
+                                const token = jwt.sign(
+                                    {_id: data._id},
+                                    process.env.JWT_SECRET,
+                                    {expiresIn: '7d'}
+                                );
+                                const {_id, email, name, role} = data;
+                                return res.json({
+                                    token, 
+                                    user: {_id, email, name, role}
+                                });
+                                }
+                            });
+                        }
+                    });
+            
+            
+            })
+            .catch(err => {
+                res.json({
+                    err: 'Facebook Login Failed'
+                });
+            })
+           
+    )
+});
 
 
 module.exports = router;
