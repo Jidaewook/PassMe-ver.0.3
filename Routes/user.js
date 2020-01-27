@@ -5,14 +5,14 @@ const router = express.Router();
 const userModel = require('../Models/user');
 const profileModel = require('../Models/profile.js');
 const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "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");
 
 const {OAuth2Client} = require('google-auth-library');
 const fetch = require('node-fetch');
 
 // req.user._id 에 로그인 한 사람의 정보를 태우고 확인하는 과정
 const requireLogin = expressJwt({
-    secret: process.env.JWT_SECRET
+    secret: process.env.JWT_SECRET || "asdf1q2w"
 });
 
 // 회원가입
@@ -28,19 +28,19 @@ router.post('/register', (req, res) => {
             } 
             const token = jwt.sign(
                 {name, email, password},
-                process.env.JWT_ACCOUNT_ACTIVATION,
+                process.env.JWT_ACCOUNT_ACTIVATION || "false",
                 {expiresIn: '10m'}
             );
             const emailData = {
-                from: process.env.EMAIL_FROM,
+                from: process.env.EMAIL_FROM || "thenolution@naver.com",
                 to: email,
                 subject: 'Account activation link',
                 html: `
                     <h1>Please use the following link to activate your account</h1>
-                    <p>${process.env.CLIENT_URL}/auth/activate/${token}</p>
+                    <p>${process.env.CLIENT_URL || "http://localhost:3000"}/auth/activate/${token}</p>
                     <hr />
                     <p>This email may contain sensetive information</p>
-                    <p>${process.env.CLIENT_URL}</p>
+                    <p>${process.env.CLIENT_URL || "http://localhost:3000"}</p>
                 `
             };
             sgMail
@@ -130,7 +130,7 @@ router.post('/login', (req, res) => {
             const token = jwt.sign({
                 _id: user._id
             }, 
-            process.env.JWT_SECRET, {expiresIn: '7d'});
+                process.env.JWT_SECRET || "asdf1q2w", {expiresIn: '7d'});
             const {_id, name, email, role} = user;
             return res.status(200).json({
                 token: token,
@@ -166,20 +166,20 @@ router.put('/forgot', (req, res) => {
             }
             const token = jwt.sign(
                 {_id: user._id, name: user.name },
-                process.env.JWT_RESET_PASSWORD,
+                process.env.JWT_RESET_PASSWORD || "12341234",
                 {expiresIn: '10m'}
             )
             const emailData = {
-                from: process.env.EMAIL_FROM,
+                from: process.env.EMAIL_FROM || "thenolution@naver.com",
                 to: email,
                 subject: `Password Reset Link`,
                 html: 
                     `
                         <h1>Please use the following link to reset your password</h1>
-                        <p>${process.env.CLIENT_URL}/auth/password/reset${token}</p>
+                        <p>${process.env.CLIENT_URL || "http://localhost:3000"}/auth/password/reset${token}</p>
                         <hr />
                         <p>This email may contain sensetive information</p>
-                        <p>${process.env.CLIENT_URL}</p>
+                        <p>${process.env.CLIENT_URL || "http://localhost:3000"}</p>
 
                     `
             };
@@ -291,7 +291,7 @@ router.post('/account-activation', (req, res) => {
     // }
     const { token } = req.body;
     if (token) {
-        jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, function (err, decoded) {
+        jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION || "false", function (err, decoded) {
             if (err) {
                 console.log('JWT VERIFY IN ACCOUNT ACTIVATION ERROR', err);
                 return res.status(401).json({
@@ -421,14 +421,14 @@ router.put('/admin/update', requireLogin, (req, res, next) => {
         });
 });
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || "233813199568-8pdarhsi50deaqieba6mspkd5a2j7645.apps.googleusercontent.com");
 
 
 
 router.post('/google-login', (req, res) => {
     const { idToken } = req.body;
 
-    client.verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID})
+    client.verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID || "233813199568-8pdarhsi50deaqieba6mspkd5a2j7645.apps.googleusercontent.com"})
         .then(response => {
             const { email_verified, name, email } = response.payload;
             if(email_verified){
@@ -436,14 +436,14 @@ router.post('/google-login', (req, res) => {
                     .findOne({email})
                     .exec((err, user) => {
                         if(user) {
-                            const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
+                            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET || "asdf1q2w", {expiresIn: '7d'});
                             const {_id, email, name, role} = user;
                             return res.json({
                                 token, 
                                 user: {_id, email, name, role}
                             });
                         } else {
-                            let password = email + process.env.JWT_SECRET;
+                            let password = email + process.env.JWT_SECRET || "asdf1q2w";
                             user = new userModel({ name, email, password });
                             user.save((err, data) => {
                                 if(err) {
@@ -452,7 +452,7 @@ router.post('/google-login', (req, res) => {
                                         error: 'user signup failed with google'
                                     });
                                 }
-                                const token = jwt.sign({ _id: data._id}, process.env.JWT_SECRET, {expiresIn: '7d'});
+                                const token = jwt.sign({ _id: data._id }, process.env.JWT_SECRET || "asdf1q2w", {expiresIn: '7d'});
                                 const {_id, email, name, role} = data;
                                 return res.json({
                                     token, 
@@ -491,7 +491,7 @@ router.post('/facebook-login', (req, res) => {
                         if(user){
                             const token = jwt.sign(
                                 {_id: user._id},
-                                process.env.JWT_SECRET,
+                                process.env.JWT_SECRET || "asdf1q2w",
                                 {expiresIn: '7d'}
                             );
                             const {_id, email, name, role} = user;
@@ -500,7 +500,7 @@ router.post('/facebook-login', (req, res) => {
                                 user: {_id, email, name, role}
                             });
                         } else {
-                            let password = email + process.env.JWT_SECRET;
+                            let password = email + process.env.JWT_SECRET || "asdf1q2w";
                             user = new userModel({name, email, password});
                             user.save((err, data) => {
                                 if(err) {
@@ -511,7 +511,7 @@ router.post('/facebook-login', (req, res) => {
                                 } else{
                                 const token = jwt.sign(
                                     {_id: data._id},
-                                    process.env.JWT_SECRET,
+                                    process.env.JWT_SECRET || "asdf1q2w",
                                     {expiresIn: '7d'}
                                 );
                                 const {_id, email, name, role} = data;
