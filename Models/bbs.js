@@ -34,7 +34,7 @@ const bbsScheama = new mongoose.Schema(
                 type: String
             }
         ],
-        like: [
+        likes: [
             {
                 user: {
                     type: mongoose.Schema.Types.ObjectId,

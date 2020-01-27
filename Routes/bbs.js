@@ -2,6 +2,7 @@ const express = require('express');
 const expressJwt = require('express-jwt');
 const router = express.Router();
 const bbsModel = require('../Models/bbs');
+const userModel = require('../Models/user');
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -100,10 +101,10 @@ router.get('/category/:catename', requireLogin, (req, res) => {
 
 //게시판 데이터 등록하기
 router.post('/write', requireLogin, uploads.single('bbsimg'),(req, res) => {
-    const {title, desc, category} = req.body;
+    const {title, desc, category, url} = req.body;
 
     const newDoc = new bbsModel({
-        title, desc, category, 
+        title, desc, category, url,
         bbsimg: req.file.path,
         user: req.user._id
     })
@@ -154,5 +155,71 @@ router.delete('/delete/:id', requireLogin, (req, res) => {
             })
         });
 })
+
+// 좋아요(like api)
+router.post('/likes/:bbsid', requireLogin, (req, res) => {
+    console.log("a", req.user._id)
+    userModel
+        .findOne({user: req.user._id})
+        .then(user => {
+            bbsModel
+                .findById(req.params.bbsid)
+                .then(post => {
+                    console.log("post is", post);
+                    // if(post.likes.filter(like => like.user.toString() === req.user._id).length > 0) {
+                    //     return res.status(400).json({
+                    //         msg: 'User already liked this post'
+                    //     });
+                    // }
+                    // post.likes.unshift({
+                    //     user: req.user._id
+                    // });
+                    // post
+                    //     .save()
+                    //     .then(post => res.json(post));
+                    if (post.likes.filter(like => like.user.toString() === req.user._id).length > 0) {
+                        return res.status(400).json({ alreadyliked: 'User already liked this post' });
+                    }
+                    // Add user id to likes array
+                    post.likes.unshift({ user: req.user._id });
+                    post.save().then(post => res.json(post));            
+                })
+                .catch(err=> res.status(400).json({
+                    msg: err.message
+                }));
+        })
+})
+
+router.post('/unlike/:bbsid', requireLogin, (req, res) => {
+    userModel
+        .findOne({user: req.user._id})
+        .then(user => {
+            bbsModel.findById(req.params.bbsid)
+                .then(post => {
+                    console.log("post is", post);
+                    if(post.likes.filter(like => like.user.toString() === req.user._id).length === 0){
+                        return res.status(400).json({
+                            notliked: 'You have not liked this post'
+                        })
+
+                    }
+                    // get remove index
+                    const removeIndex = post.likes
+                        .map(item => item.user.toString())
+                        .indexOf(req.user._id);
+                    //slice out of array
+                    post.likes.splice(removeIndex, 1);
+
+                    //save
+                    post
+                        .save()
+                        .then(post => res.json(post));
+                })
+                .catch(err => res.status(500).json({
+                    err: err.message
+                }));
+        })
+})
+
 
 module.exports = router;
