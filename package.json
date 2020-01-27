@@ -18,7 +18,6 @@
   },
   "homepage": "https://github.com/Jidaewook/PassMe-ver.0.3#readme",
   "devDependencies": {
-    "dependencies": "0.0.1",
     "nodemon": "^2.0.1"
   },
   "dependencies": {
