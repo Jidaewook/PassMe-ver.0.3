@@ -3,12 +3,12 @@ const jwt = require('jsonwebtoken');
 const expressJwt = require('express-jwt');
 const router = express.Router();
 const userModel = require('../Models/user');
+const profileModel = require('../Models/profile.js');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const {OAuth2Client} = require('google-auth-library');
 const fetch = require('node-fetch');
-
 
 // req.user._id 에 로그인 한 사람의 정보를 태우고 확인하는 과정
 const requireLogin = expressJwt({
@@ -137,6 +137,20 @@ router.post('/login', (req, res) => {
                 user: {_id, name, email, role}
             });
         })
+});
+
+router.get('/all', (req, res) => {
+    const errors = {};
+    profileModel.find()
+        .populate('user', ['name'])
+        .then(profiles => {
+            if(!profiles){
+                errors.noprofile = 'There is no profiles';
+                return res.status(404).json(errors);
+            }
+            res.json(profiles);
+        })
+        .catch(err => res.json(err))
 });
 
 // 패스워드 찾기, put = patch
@@ -409,6 +423,8 @@ router.put('/admin/update', requireLogin, (req, res, next) => {
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+
+
 router.post('/google-login', (req, res) => {
     const { idToken } = req.body;
 
@@ -519,5 +535,11 @@ router.post('/facebook-login', (req, res) => {
     )
 });
 
+
+// 네이버 로그인 중... 카톡에 사진 있음
+// router.get('/naverlogin', function (req, res) {
+//     api_url = 'https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=' + process.env.NAVER_CLIENT_ID + '&redirect_uri=' + redirectURI + '&state=' + state;
+//     res.writeHead(200, {'Content-Type': 'text/html'})
+// });
 
 module.exports = router;
