@@ -54,10 +54,27 @@ router.patch('/', (req, res) => {
     })
 })
 
-router.delete('/', (req, res) => {
-    res.status(200).json({
-        msg: 'bbs delete'
-    })
+router.delete('/delete/:id', requireLogin, (req, res) => {
+    bbsModel
+        .findByIdAndRemove(req.params.id)
+        .then(result => {
+            console.log(result)
+
+            if(!result) {
+                return res.status(400).json({
+                    msg: 'cannot find BBS ID'
+                })
+            }
+
+            res.status(200).json({
+                msg: 'success delete' + req.params.id
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg: err.message
+            })
+        });
 })
 
 module.exports = router;
