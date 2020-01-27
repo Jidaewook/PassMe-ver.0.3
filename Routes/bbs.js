@@ -2,6 +2,35 @@ const express = require('express');
 const expressJwt = require('express-jwt');
 const router = express.Router();
 const bbsModel = require('../Models/bbs');
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, './uploads/');
+    },
+    filename: function(req, file, cb){
+        cb(null, new Date().toISOString() + file.originalname);
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+
+};
+
+const uploads = multer({
+    storage: storage,
+    limits: {
+        fileSize: 1024 * 1024 * 5
+    },
+    fileFilter: fileFilter
+});
+
+
 
 // req.user._id 에 로그인 한 사람의 정보를 태우고 확인하는 과정
 const requireLogin = expressJwt({
@@ -70,19 +99,24 @@ router.get('/category/:catename', requireLogin, (req, res) => {
 
 
 //게시판 데이터 등록하기
-router.post('/write', requireLogin,(req, res) => {
+router.post('/write', requireLogin, uploads.single('bbsimg'),(req, res) => {
     const {title, desc, category} = req.body;
 
-    const newUser = new bbsModel({
+    const newDoc = new bbsModel({
         title, desc, category, 
+        bbsimg: req.file.path,
         user: req.user._id
     })
 
-    newUser
+    console.log(
+        newDoc
+    )
+
+    newDoc
         .save()
-        .then(user => {
+        .then(doc => {
             res.status(200).json({
-                userInfo: user
+                docInfo: doc
             })
         })
         .catch(err => {

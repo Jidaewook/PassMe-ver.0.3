@@ -23,7 +23,7 @@ const bbsScheama = new mongoose.Schema(
             type: String,
             required: true
         },
-        img: {
+        bbsimg: {
             type: String
         },
         url: {
