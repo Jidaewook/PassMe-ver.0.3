@@ -53,7 +53,7 @@ router.post('/register', (req, res) => {
                 })  
                 .catch(err =>{
                     return res.json({
-                        message: err.message
+                        message: err
                     });
                 });
 

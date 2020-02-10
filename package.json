@@ -4,8 +4,12 @@
   "description": "PassMe-ver.0.3",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon App.js"
+    "client-install": "npm install --prefix client",
+    "start": "node App.js",
+    "server": "nodemon App.js",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install client && npm run build client"
   },
   "repository": {
     "type": "git",

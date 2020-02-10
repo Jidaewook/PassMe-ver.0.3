@@ -33,6 +33,14 @@ app.use('/user', userRoutes);
 app.use('/profile', profileRoutes);
 app.use('/bbs', bbsRoutes);
 
+if(process.env.NODE_ENV === 'production'){
+    app.use(express.static('client/build'));
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+
+    });
+}
+
 const port = process.env.PORT || 7000;
 
 app.listen(port, () => console.log(`Server Running on ${port}`));

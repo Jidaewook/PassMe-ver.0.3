@@ -221,5 +221,16 @@ router.post('/unlike/:bbsid', requireLogin, (req, res) => {
         })
 })
 
+router.post('/commets/:bbsid', requireLogin, (req, res) => {
+    const {desc} = req.body;
+
+    bbsModel
+        .findById(req.params.bbsid)
+        .then(post => {
+            console.log('comment is.. ', post)
+            
+        });
+});
+
 
 module.exports = router;
