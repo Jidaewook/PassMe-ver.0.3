@@ -39,7 +39,7 @@ const requireLogin = expressJwt({
 });
 
 // 게시판 데이터 불러오기
-router.get('/', requireLogin, (req, res) => {
+router.get('/', (req, res) => {
     bbsModel
         .find()
         .then(docs => {
@@ -76,15 +76,15 @@ router.get('/detail/:id', requireLogin, (req, res) => {
 
 
 
-//게시판(카테고리) 불러오기
-router.get('/category/:catename', requireLogin, (req, res) => {
-    const catename = req.params.catename
+//메인노출용 PSAT게시판(카테고리) 불러오기
+router.get('/category/psat', (req, res) => {
 
     bbsModel
         //find는 복수 도큐멘츠를 찾아서 결과물로 가져오고, findOne은 하나의 도큐멘트를 찾아서 결과물로 가져온다.
-        .find({category: catename})
+        .find({category: "psat"})
         .then(result => {
             res.status(200).json({
+                cateCount: result.length,
                 cateInfo: result
             })
         })
@@ -95,7 +95,24 @@ router.get('/category/:catename', requireLogin, (req, res) => {
         });
 })
 
+//ncs게시판(카테고리) 불러오기
+router.get('/category/ncs', (req, res) => {
 
+    bbsModel
+        //find는 복수 도큐멘츠를 찾아서 결과물로 가져오고, findOne은 하나의 도큐멘트를 찾아서 결과물로 가져온다.
+        .find({ category: "ncs" })
+        .then(result => {
+            res.status(200).json({
+                cateCount: result.length,
+                cateInfo: result
+            })
+        })
+        .catch(err => {
+            res.status(500).json({
+                msg: err.message
+            })
+        });
+})
 
 
 
