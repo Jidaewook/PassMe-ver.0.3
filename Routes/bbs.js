@@ -116,14 +116,14 @@ router.get('/category/ncs', (req, res) => {
 
 
 
-//게시판 데이터 등록하기
-router.post('/write', requireLogin, uploads.single('bbsimg'),(req, res) => {
-    const {title, desc, category, url} = req.body;
+//게시판 데이터 등록하기(requireLogin)
+router.post('/write', uploads.single('bbsimg'),(req, res) => {
+    const {title, desc, category, url, tags} = req.body;
 
     const newDoc = new bbsModel({
-        title, desc, category, url,
-        bbsimg: req.file.path,
-        user: req.user._id
+        title, desc, category, url, tags,
+        bbsimg: req.file.path
+        // user: req.user._id
     })
 
     console.log(

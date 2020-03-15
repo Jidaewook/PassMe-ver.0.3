@@ -4,11 +4,11 @@ const mongoose = require('mongoose');
 // bbs schema
 const bbsScheama = new mongoose.Schema(
     {
-        user: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "users",
-            required: true
-        },
+        // user: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "users",
+        //     required: true
+        // },
         category: {
             type: String,
             required: true,
